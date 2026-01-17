@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แบบสำรวจไซต์เสื้อ - ชงโคเกมส์</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'Sarabun', sans-serif; 
+            /* Maroon Pastel Gradient (Rose tones) */
+            background: linear-gradient(135deg, #fff1f2 0%, #fda4af 100%); 
+        }
+        h1, h2, h3, .font-heading { font-family: 'Kanit', sans-serif; }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 1);
+            box-shadow: 0 10px 40px rgba(159, 18, 57, 0.15); /* Shadow with maroon tint */
+        }
+        .btn-pastel-maroon {
+            /* Gradient from soft rose to deeper maroon-ish rose */
+            background: linear-gradient(90deg, #fb7185, #e11d48);
+            color: white;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(225, 29, 72, 0.3);
+        }
+        .btn-pastel-maroon:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(225, 29, 72, 0.4);
+        }
+        .input-pastel {
+            @apply bg-rose-50 border-rose-100 text-slate-700 focus:ring-2 focus:ring-rose-200 outline-none;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4 relative">
+    
+    <!-- Decorative Blobs (Maroon/Rose tones) -->
+    <div class="absolute top-10 left-10 w-32 h-32 bg-rose-200 rounded-full mix-blend-multiply filter blur-2xl opacity-70 animate-blob"></div>
+    <div class="absolute bottom-10 right-10 w-32 h-32 bg-rose-300 rounded-full mix-blend-multiply filter blur-2xl opacity-70 animate-blob animation-delay-2000"></div>
+
+    <div id="app" class="glass-card p-8 md:p-10 rounded-[2.5rem] shadow-2xl w-full max-w-lg relative z-10">
+
+        <div class="text-center mb-8 mt-6">
+            <!-- College Logo Added -->
+            <img src="png.png" alt="Logo" class="h-24 w-auto mx-auto mb-4 drop-shadow-md hover:scale-105 transition duration-500">
+            <h1 class="text-3xl font-bold font-heading text-rose-800 mb-2">แบบสำรวจไซต์เสื้อ</h1>
+            <p class="text-slate-500 text-sm">งานกีฬาชงโคเกมส์ วิทยาลัยเทคนิคพังงา</p>
+            <div class="h-1 w-20 bg-rose-300 mx-auto mt-4 rounded-full"></div>
+        </div>
+
+        <form @submit.prevent="confirmSubmit" class="space-y-5">
+            <div>
+                <label class="text-sm font-bold text-rose-700 ml-2 mb-1 block">สีสังกัด</label>
+                <select v-model="form.color" class="w-full p-4 rounded-2xl text-sm input-pastel border cursor-pointer" required>
+                    <option value="" disabled selected>เลือกสีสังกัดของคุณ</option>
+                    <option value="purple">💜 สีม่วง</option>
+                    <option value="skyblue">💙 สีฟ้า</option>
+                    <option value="blue">🔵 สีน้ำเงิน</option>
+                    <option value="green">💚 สีเขียว</option>
+                    <option value="orange">🧡 สีแสด</option>
+                    <option value="yellow">💛 สีเหลือง</option>
+                </select>
+            </div>
+            
+            <div v-if="form.color" class="animate-fade-in">
+                <label class="text-sm font-bold text-rose-700 ml-2 mb-1 block">แผนกวิชา</label>
+                <select v-model="form.department" class="w-full p-4 rounded-2xl text-sm input-pastel border cursor-pointer" required>
+                    <option value="" disabled selected>เลือกแผนกวิชา</option>
+                    <option v-for="dept in currentDepartmentOptions" :value="dept">{{ dept }}</option>
+                </select>
+            </div>
+
+            <div class="grid grid-cols-1 gap-4">
+                <div>
+                    <label class="text-sm font-bold text-rose-700 ml-2 mb-1 block">ชื่อ-นามสกุล</label>
+                    <input v-model="form.name" type="text" placeholder="ระบุชื่อจริง-นามสกุล" class="w-full p-4 rounded-2xl text-sm input-pastel border" required>
+                </div>
+                <div>
+                    <label class="text-sm font-bold text-rose-700 ml-2 mb-1 block">รหัสนักศึกษา</label>
+                    <input v-model="form.student_id" type="text" placeholder="เช่น 662010..." class="w-full p-4 rounded-2xl text-sm input-pastel border" required>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-3 gap-3">
+                <div class="col-span-1">
+                    <label class="text-xs font-bold text-rose-700 ml-1 mb-1 block">ระดับชั้น</label>
+                    <select v-model="form.level" class="w-full p-3 rounded-2xl text-sm input-pastel border text-center">
+                        <option v-for="l in levels" :value="l.id">{{ l.name }}</option>
+                    </select>
+                </div>
+                <div class="col-span-1">
+                    <label class="text-xs font-bold text-rose-700 ml-1 mb-1 block">ห้อง</label>
+                    <select v-model="form.room" class="w-full p-3 rounded-2xl text-sm input-pastel border text-center">
+                        <option value="" disabled>เลือก</option>
+                        <option v-for="n in 10" :key="n" :value="n">{{ n }}</option>
+                    </select>
+                </div>
+                <div class="col-span-1">
+                    <label class="text-xs font-bold text-rose-700 ml-1 mb-1 block">ไซต์เสื้อ</label>
+                    <select v-model="form.shirt_size" class="w-full p-3 rounded-2xl text-sm input-pastel border text-center font-bold text-rose-600">
+                        <option value="S">S</option>
+                        <option value="M">M</option>
+                        <option value="L">L</option>
+                        <option value="XL">XL</option>
+                        <option value="2XL">2XL</option>
+                        <option value="3XL">3XL</option>
+                        <option value="4XL">4XL</option>
+                    </select>
+                </div>
+            </div>
+
+            <button type="submit" class="w-full btn-pastel-maroon font-heading font-bold py-4 rounded-2xl shadow-lg text-lg mt-6 hover:scale-[1.02] active:scale-[0.98] transition">
+                🚀 ยืนยันข้อมูล
+            </button>
+        </form>
+        
+        <p class="text-center text-xs text-rose-300 mt-6 font-light">กรุณาตรวจสอบข้อมูลให้ถูกต้องก่อนกดส่ง</p>
+    </div>
+
+    <script>
+    const { createApp, ref, computed } = Vue;
+    // 🟢 URL เดิมของคุณ
+    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxiaKmMU7C5iWSBapSL-lalTVLPAhHGgyNFoFJ6Sr5RrLa7R5FM8GKNbnl-zUJg92WY/exec'; 
+
+    createApp({
+        setup() {
+            const form = ref({ name: '', student_id: '', level: 'voc1', room: '', shirt_size: 'M', department: '', color: '' });
+            
+            // 1. สร้างตัวแปร levels (เพื่อให้ dropdown ระดับชั้นทำงาน)
+            const levels = [
+                { id: 'voc1', name: 'ปวช. 1' },
+                { id: 'voc2', name: 'ปวช. 2' },
+                { id: 'voc3', name: 'ปวช. 3' },
+                { id: 'dip1', name: 'ปวส. 1' },
+                { id: 'dip2', name: 'ปวส. 2' }
+            ];
+
+            // 2. ข้อมูลแผนกวิชา (ตามที่คุณระบุมา)
+            const departments = {
+                orange: ['ช่างไฟฟ้า', 'อาหารและโภชนาการ'], 
+                green: ['ช่างยนต์', 'เทคโนโลยีสารสนเทศ'], 
+                purple: ['เทคโนโลยีฐานวิทยาศาสตร์'],
+                skyblue: ['ช่างอิเล็กทรอนิกส์', 'เทคโนโลยีธุรกิจดิจิทัล', 'การโรงแรม'], 
+                blue: ['ช่างก่อสร้าง', 'การตลาด'], 
+                yellow: ['การบัญชี', 'ช่างเชื่อม', 'ช่างกล']
+            };
+
+            // 3. คำนวณตัวเลือกแผนก ตามสีที่เลือก
+            const currentDepartmentOptions = computed(() => {
+                if (!form.value.color) return [];
+                // คืนค่ารายการแผนกตามสี หรือคืนค่าอาเรย์ว่างถ้าไม่เจอ
+                return departments[form.value.color] || [];
+            });
+
+            const confirmSubmit = () => {
+                // ตรวจสอบความครบถ้วนของข้อมูล
+                if (!form.value.color || !form.value.department || !form.value.name || !form.value.student_id) {
+                    Swal.fire('แจ้งเตือน', 'กรุณากรอกข้อมูลให้ครบถ้วน', 'warning');
+                    return;
+                }
+
+                Swal.fire({
+                    title: 'ยืนยันข้อมูล?',
+                    html: `ชื่อ: ${form.value.name}<br>สีสังกัด: ${form.value.color}<br>แผนก: ${form.value.department}<br>ไซต์: <b>${form.value.shirt_size}</b>`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#e11d48',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'ใช่, ส่งข้อมูล',
+                    cancelButtonText: 'ตรวจสอบอีกครั้ง'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        submitData();
+                    }
+                });
+            };
+
+            const submitData = async () => {
+                try {
+                    Swal.fire({ title: 'กำลังส่ง...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                    
+                    await axios.post(GOOGLE_SCRIPT_URL, JSON.stringify({ 
+                        action: 'submitSurvey', 
+                        ...form.value 
+                    }), {
+                        headers: { "Content-Type": "text/plain" }
+                    });
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'สำเร็จ',
+                        text: 'บันทึกข้อมูลเรียบร้อย',
+                        confirmButtonText: 'ตกลง'
+                    }).then(() => {
+                        // รีเซ็ตฟอร์ม
+                        form.value = { name: '', student_id: '', level: 'voc1', room: '', shirt_size: 'M', department: '', color: '' };
+                    });
+                } catch (e) {
+                    console.error(e);
+                    Swal.fire('ผิดพลาด', 'ส่งข้อมูลไม่สำเร็จ กรุณาลองใหม่', 'error');
+                }
+            };
+
+            // 4. สำคัญมาก: ต้อง return ตัวแปร levels และ currentDepartmentOptions ออกไปให้หน้า HTML ใช้
+            return { 
+                form, 
+                confirmSubmit,
+                levels,
+                currentDepartmentOptions
+            };
+        }
+    }).mount('#app');
+    </script>
+</body>
+</html>
