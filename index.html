@@ -40,14 +40,12 @@
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-4 relative">
     
-    <!-- Decorative Blobs (Maroon/Rose tones) -->
     <div class="absolute top-10 left-10 w-32 h-32 bg-rose-200 rounded-full mix-blend-multiply filter blur-2xl opacity-70 animate-blob"></div>
     <div class="absolute bottom-10 right-10 w-32 h-32 bg-rose-300 rounded-full mix-blend-multiply filter blur-2xl opacity-70 animate-blob animation-delay-2000"></div>
 
     <div id="app" class="glass-card p-8 md:p-10 rounded-[2.5rem] shadow-2xl w-full max-w-lg relative z-10">
 
         <div class="text-center mb-8 mt-6">
-            <!-- College Logo Added -->
             <img src="png.png" alt="Logo" class="h-24 w-auto mx-auto mb-4 drop-shadow-md hover:scale-105 transition duration-500">
             <h1 class="text-3xl font-bold font-heading text-rose-800 mb-2">แบบสำรวจไซต์เสื้อ</h1>
             <p class="text-slate-500 text-sm">งานกีฬาชงโคเกมส์ วิทยาลัยเทคนิคพังงา</p>
@@ -102,7 +100,12 @@
                     </select>
                 </div>
                 <div class="col-span-1">
-                    <label class="text-xs font-bold text-rose-700 ml-1 mb-1 block">ไซต์เสื้อ</label>
+                    <div class="flex justify-between items-end mb-1">
+                        <label class="text-xs font-bold text-rose-700 ml-1">ไซต์เสื้อ</label>
+                        <button type="button" @click="showSizeChart" class="text-[10px] text-rose-500 underline hover:text-rose-800 transition cursor-pointer flex items-center gap-1">
+                            📏 ดูตารางไซส์
+                        </button>
+                    </div>
                     <select v-model="form.shirt_size" class="w-full p-3 rounded-2xl text-sm input-pastel border text-center font-bold text-rose-600">
                         <option value="S">S</option>
                         <option value="M">M</option>
@@ -130,10 +133,9 @@
 
     createApp({
         setup() {
-            // 🟢 แก้ไข 1: เปลี่ยนค่าเริ่มต้น level เป็นภาษาไทย 'ปวช. 1'
+            // ค่าเริ่มต้น level เป็นภาษาไทย
             const form = ref({ name: '', student_id: '', level: 'ปวช. 1', room: '', shirt_size: 'M', department: '', color: '' });
             
-            // 🟢 แก้ไข 2: เปลี่ยน id ใน levels เป็นภาษาไทย เพื่อไม่ให้ส่งค่าภาษาอังกฤษไป
             const levels = [
                 { id: 'ปวช. 1', name: 'ปวช. 1' },
                 { id: 'ปวช. 2', name: 'ปวช. 2' },
@@ -142,7 +144,7 @@
                 { id: 'ปวส. 2', name: 'ปวส. 2' }
             ];
 
-            // 2. ข้อมูลแผนกวิชา (ตามที่คุณระบุมา)
+            // ข้อมูลแผนกวิชา
             const departments = {
                 orange: ['ช่างไฟฟ้า', 'อาหารและโภชนาการ'], 
                 green: ['ช่างยนต์', 'เทคโนโลยีสารสนเทศ'], 
@@ -152,15 +154,27 @@
                 yellow: ['การบัญชี', 'ช่างเชื่อม', 'ช่างกล']
             };
 
-            // 3. คำนวณตัวเลือกแผนก ตามสีที่เลือก
             const currentDepartmentOptions = computed(() => {
                 if (!form.value.color) return [];
-                // คืนค่ารายการแผนกตามสี หรือคืนค่าอาเรย์ว่างถ้าไม่เจอ
                 return departments[form.value.color] || [];
             });
 
+            // 🟢 ฟังก์ชันแสดงตารางไซส์ (ใช้รูปที่คุณให้มา)
+            const showSizeChart = () => {
+                Swal.fire({
+                    imageUrl: 'image_f295c7.jpg', // ⚠️ ตรวจสอบให้แน่ใจว่าชื่อไฟล์ตรงกับที่คุณวางในโฟลเดอร์
+                    imageAlt: 'ตารางไซส์เสื้อ',
+                    showCloseButton: true,
+                    showConfirmButton: false,
+                    width: 'auto',
+                    customClass: {
+                        popup: 'rounded-[2rem]',
+                        image: 'rounded-xl mt-4'
+                    }
+                });
+            };
+
             const confirmSubmit = () => {
-                // ตรวจสอบความครบถ้วนของข้อมูล
                 if (!form.value.color || !form.value.department || !form.value.name || !form.value.student_id) {
                     Swal.fire('แจ้งเตือน', 'กรุณากรอกข้อมูลให้ครบถ้วน', 'warning');
                     return;
@@ -199,7 +213,6 @@
                         text: 'บันทึกข้อมูลเรียบร้อย',
                         confirmButtonText: 'ตกลง'
                     }).then(() => {
-                        // รีเซ็ตฟอร์ม (ตั้งค่าเริ่มต้นระดับชั้นเป็นภาษาไทยด้วย)
                         form.value = { name: '', student_id: '', level: 'ปวช. 1', room: '', shirt_size: 'M', department: '', color: '' };
                     });
                 } catch (e) {
@@ -208,12 +221,12 @@
                 }
             };
 
-            // 4. สำคัญมาก: ต้อง return ตัวแปร levels และ currentDepartmentOptions ออกไปให้หน้า HTML ใช้
             return { 
                 form, 
                 confirmSubmit,
                 levels,
-                currentDepartmentOptions
+                currentDepartmentOptions,
+                showSizeChart // 🟢 return ฟังก์ชันออกไปใช้
             };
         }
     }).mount('#app');
