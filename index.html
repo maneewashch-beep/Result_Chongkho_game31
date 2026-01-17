@@ -53,6 +53,10 @@
         </div>
 
         <form @submit.prevent="confirmSubmit" class="space-y-5">
+            <button type="button" @click="showSizeChart" class="w-full py-3 rounded-2xl bg-rose-100 text-rose-700 font-bold hover:bg-rose-200 transition flex items-center justify-center gap-2 shadow-sm mb-2">
+                <span class="text-xl">📏</span> คลิกเพื่อดูตารางไซส์เสื้อ
+            </button>
+
             <div>
                 <label class="text-sm font-bold text-rose-700 ml-2 mb-1 block">สีสังกัด</label>
                 <select v-model="form.color" class="w-full p-4 rounded-2xl text-sm input-pastel border cursor-pointer" required>
@@ -100,12 +104,7 @@
                     </select>
                 </div>
                 <div class="col-span-1">
-                    <div class="flex justify-between items-end mb-1">
-                        <label class="text-xs font-bold text-rose-700 ml-1">ไซต์เสื้อ</label>
-                        <button type="button" @click="showSizeChart" class="text-[10px] text-rose-500 underline hover:text-rose-800 transition cursor-pointer flex items-center gap-1">
-                            📏 ดูตารางไซส์
-                        </button>
-                    </div>
+                    <label class="text-xs font-bold text-rose-700 ml-1 mb-1 block">ไซต์เสื้อ</label>
                     <select v-model="form.shirt_size" class="w-full p-3 rounded-2xl text-sm input-pastel border text-center font-bold text-rose-600">
                         <option value="S">S</option>
                         <option value="M">M</option>
@@ -159,17 +158,19 @@
                 return departments[form.value.color] || [];
             });
 
-            // 🟢 ฟังก์ชันแสดงตารางไซส์ (แก้ไขชื่อไฟล์แล้ว)
+            // 🟢 แก้ไขจุดที่ 2: ปรับขนาดรูปภาพให้เหมาะสมกับทุกอุปกรณ์ (ไม่ล้นจอ)
             const showSizeChart = () => {
                 Swal.fire({
-                    imageUrl: 'size_chart.jpg', // ✅ แก้ไขให้เป็นชื่อไฟล์ size_chart.jpg
+                    imageUrl: 'size_chart.jpg', 
                     imageAlt: 'ตารางไซส์เสื้อ',
                     showCloseButton: true,
                     showConfirmButton: false,
                     width: 'auto',
+                    padding: '1rem', // เพิ่ม padding ให้ popup นิดหน่อย
                     customClass: {
                         popup: 'rounded-[2rem]',
-                        image: 'rounded-xl mt-4'
+                        // เพิ่ม max-h-[75vh] เพื่อจำกัดความสูงไม่ให้เกิน 75% ของหน้าจอ, w-auto h-auto mx-auto เพื่อจัดกลางและรักษาสัดส่วน
+                        image: 'rounded-xl mt-2 w-auto h-auto max-h-[75vh] mx-auto object-contain shadow-sm' 
                     }
                 });
             };
@@ -226,7 +227,7 @@
                 confirmSubmit,
                 levels,
                 currentDepartmentOptions,
-                showSizeChart // 🟢 return ฟังก์ชันออกไปใช้
+                showSizeChart
             };
         }
     }).mount('#app');
