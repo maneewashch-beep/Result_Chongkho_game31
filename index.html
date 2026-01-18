@@ -71,7 +71,7 @@
             </div>
             
             <div v-if="form.color" class="animate-fade-in">
-                <label class="text-sm font-bold text-rose-700 ml-2 mb-1 block">แผนกวิชา</label>
+                <label class="text-sm font-bold text-rose-700 ml-2 mb-1 block">แผนกวิชา / หน่วยงาน</label>
                 <select v-model="form.department" class="w-full p-4 rounded-2xl text-sm input-pastel border cursor-pointer" required>
                     <option value="" disabled selected>เลือกแผนกวิชา</option>
                     <option v-for="dept in currentDepartmentOptions" :value="dept">{{ dept }}</option>
@@ -84,8 +84,8 @@
                     <input v-model="form.name" type="text" placeholder="ระบุชื่อจริง-นามสกุล" class="w-full p-4 rounded-2xl text-sm input-pastel border" required>
                 </div>
                 <div>
-                    <label class="text-sm font-bold text-rose-700 ml-2 mb-1 block">รหัสนักศึกษา</label>
-                    <input v-model="form.student_id" type="text" placeholder="เช่น 662010..." class="w-full p-4 rounded-2xl text-sm input-pastel border" required>
+                    <label class="text-sm font-bold text-rose-700 ml-2 mb-1 block">รหัสนักศึกษา (ครูใส่ขีด - )</label>
+                    <input v-model="form.student_id" type="text" placeholder="เช่น 662010... หรือ -" class="w-full p-4 rounded-2xl text-sm input-pastel border" required>
                 </div>
             </div>
             
@@ -101,11 +101,13 @@
                     <select v-model="form.room" class="w-full p-3 rounded-2xl text-sm input-pastel border text-center">
                         <option value="" disabled>เลือก</option>
                         <option v-for="n in 10" :key="n" :value="n">{{ n }}</option>
+                        <option value="-">-</option>
                     </select>
                 </div>
                 <div class="col-span-1">
                     <label class="text-xs font-bold text-rose-700 ml-1 mb-1 block">ไซต์เสื้อ</label>
                     <select v-model="form.shirt_size" class="w-full p-3 rounded-2xl text-sm input-pastel border text-center font-bold text-rose-600">
+                        <option value="SS">SS</option>
                         <option value="S">S</option>
                         <option value="M">M</option>
                         <option value="L">L</option>
@@ -113,6 +115,8 @@
                         <option value="2XL">2XL</option>
                         <option value="3XL">3XL</option>
                         <option value="4XL">4XL</option>
+                        <option value="5XL">5XL</option>
+                        <option value="6XL">6XL</option>
                     </select>
                 </div>
             </div>
@@ -140,14 +144,23 @@
                 { id: 'ปวช. 2', name: 'ปวช. 2' },
                 { id: 'ปวช. 3', name: 'ปวช. 3' },
                 { id: 'ปวส. 1', name: 'ปวส. 1' },
-                { id: 'ปวส. 2', name: 'ปวส. 2' }
+                { id: 'ปวส. 2', name: 'ปวส. 2' },
+                // 🟢 เพิ่ม คณะครู/บุคลากร
+                { id: 'คณะครู/บุคลากร', name: 'ครู/บุคลากร' }
             ];
 
             // ข้อมูลแผนกวิชา
             const departments = {
                 orange: ['ช่างไฟฟ้า', 'อาหารและโภชนาการ'], 
                 green: ['ช่างยนต์', 'เทคโนโลยีสารสนเทศ'], 
-                purple: ['เทคโนโลยีฐานวิทยาศาสตร์'],
+                // 🟢 เพิ่มแผนกให้สีม่วง
+                purple: [
+                    'เทคโนโลยีฐานวิทยาศาสตร์',
+                    'การท่องเที่ยว',
+                    'แปรรูปอาหาร',
+                    'ไมซ์และอีเวนท์',
+                    'ท่องเที่ยวเชิงสุขภาพ'
+                ],
                 skyblue: ['ช่างอิเล็กทรอนิกส์', 'เทคโนโลยีธุรกิจดิจิทัล', 'การโรงแรม'], 
                 blue: ['ช่างก่อสร้าง', 'การตลาด'], 
                 yellow: ['การบัญชี', 'ช่างเชื่อม', 'ช่างกล']
@@ -158,7 +171,7 @@
                 return departments[form.value.color] || [];
             });
 
-            // 🟢 แก้ไขจุดที่ 2: ปรับขนาดรูปภาพให้เหมาะสมกับทุกอุปกรณ์ (ไม่ล้นจอ)
+            // ปรับขนาดรูปภาพให้เหมาะสมกับทุกอุปกรณ์ (ไม่ล้นจอ)
             const showSizeChart = () => {
                 Swal.fire({
                     imageUrl: 'size_chart.jpg', 
@@ -166,10 +179,9 @@
                     showCloseButton: true,
                     showConfirmButton: false,
                     width: 'auto',
-                    padding: '1rem', // เพิ่ม padding ให้ popup นิดหน่อย
+                    padding: '1rem', 
                     customClass: {
                         popup: 'rounded-[2rem]',
-                        // เพิ่ม max-h-[75vh] เพื่อจำกัดความสูงไม่ให้เกิน 75% ของหน้าจอ, w-auto h-auto mx-auto เพื่อจัดกลางและรักษาสัดส่วน
                         image: 'rounded-xl mt-2 w-auto h-auto max-h-[75vh] mx-auto object-contain shadow-sm' 
                     }
                 });
