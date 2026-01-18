@@ -90,13 +90,14 @@
             </div>
             
             <div class="grid grid-cols-3 gap-3">
-                <div class="col-span-1">
+                <div class="col-span-1" v-if="!isStaff">
                     <label class="text-xs font-bold text-rose-700 ml-1 mb-1 block">ระดับชั้น</label>
                     <select v-model="form.level" class="w-full p-3 rounded-2xl text-sm input-pastel border text-center">
                         <option v-for="l in levels" :value="l.id">{{ l.name }}</option>
                     </select>
                 </div>
-                <div class="col-span-1">
+                
+                <div class="col-span-1" v-if="!isStaff">
                     <label class="text-xs font-bold text-rose-700 ml-1 mb-1 block">ห้อง</label>
                     <select v-model="form.room" class="w-full p-3 rounded-2xl text-sm input-pastel border text-center">
                         <option value="" disabled>เลือก</option>
@@ -104,7 +105,8 @@
                         <option value="-">-</option>
                     </select>
                 </div>
-                <div class="col-span-1">
+
+                <div :class="isStaff ? 'col-span-3' : 'col-span-1'">
                     <label class="text-xs font-bold text-rose-700 ml-1 mb-1 block">ไซต์เสื้อ</label>
                     <select v-model="form.shirt_size" class="w-full p-3 rounded-2xl text-sm input-pastel border text-center font-bold text-rose-600">
                         <option value="SS">SS</option>
@@ -130,7 +132,8 @@
     </div>
 
     <script>
-    const { createApp, ref, computed } = Vue;
+    // 🟢 เพิ่ม watch เข้ามาใน destructuring
+    const { createApp, ref, computed, watch } = Vue;
     // 🟢 URL เดิมของคุณ
     const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxiaKmMU7C5iWSBapSL-lalTVLPAhHGgyNFoFJ6Sr5RrLa7R5FM8GKNbnl-zUJg92WY/exec'; 
 
@@ -148,7 +151,7 @@
                 { id: 'คณะครู/บุคลากร', name: 'ครู/บุคลากร' }
             ];
 
-            // ข้อมูลแผนกวิชา 🟢 เพิ่ม 'คณะครู/บุคลากร' เข้าไปในทุกสี
+            // ข้อมูลแผนกวิชา
             const departments = {
                 orange: ['ช่างไฟฟ้า', 'อาหารและโภชนาการ', 'คณะครู/บุคลากร'], 
                 green: ['ช่างยนต์', 'เทคโนโลยีสารสนเทศ', 'คณะครู/บุคลากร'], 
@@ -168,6 +171,21 @@
             const currentDepartmentOptions = computed(() => {
                 if (!form.value.color) return [];
                 return departments[form.value.color] || [];
+            });
+
+            // 🟢 ตรวจสอบว่าเป็นครู/บุคลากรหรือไม่
+            const isStaff = computed(() => form.value.department === 'คณะครู/บุคลากร');
+
+            // 🟢 Watcher: เมื่อเลือกเป็นครู ให้เซ็ตระดับชั้นเป็นครูและห้องเป็น - อัตโนมัติ
+            watch(isStaff, (newVal) => {
+                if (newVal) {
+                    form.value.level = 'คณะครู/บุคลากร';
+                    form.value.room = '-';
+                } else {
+                    // หากเปลี่ยนกลับเป็นนักเรียน ให้รีเซ็ตค่าพื้นฐาน
+                    form.value.level = 'ปวช. 1';
+                    form.value.room = ''; 
+                }
             });
 
             // ปรับขนาดรูปภาพให้เหมาะสมกับทุกอุปกรณ์ (ไม่ล้นจอ)
@@ -238,7 +256,8 @@
                 confirmSubmit,
                 levels,
                 currentDepartmentOptions,
-                showSizeChart
+                showSizeChart,
+                isStaff // 🟢 return ออกไปใช้ใน template
             };
         }
     }).mount('#app');
