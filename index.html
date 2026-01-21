@@ -133,12 +133,10 @@
 
     <script>
     const { createApp, ref, computed, watch } = Vue;
-    // 🟢 URL เดิมของคุณ
-    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxiaKmMU7C5iWSBapSL-lalTVLPAhHGgyNFoFJ6Sr5RrLa7R5FM8GKNbnl-zUJg92WY/exec'; 
+    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx2PLpl6UOJ3M1P2L4F8o8lROd253SrFQNlae1QYAPrTqhZtQUw6zm9bXHM4iEKC3Dt/exec'; 
 
     createApp({
         setup() {
-            // ค่าเริ่มต้น level เป็นภาษาไทย
             const form = ref({ name: '', student_id: '', level: 'ปวช. 1', room: '', shirt_size: 'M', department: '', color: '' });
             
             const levels = [
@@ -151,7 +149,6 @@
                 { id: 'คณะครู/บุคลากร', name: 'ครู/บุคลากร' }
             ];
 
-            // ข้อมูลแผนกวิชา
             const departments = {
                 orange: ['ช่างไฟฟ้า', 'อาหารและโภชนาการ', 'คณะครู/บุคลากร'], 
                 green: ['ช่างยนต์', 'เทคโนโลยีสารสนเทศ', 'คณะครู/บุคลากร'], 
@@ -174,10 +171,14 @@
 
             const isStaff = computed(() => form.value.department === 'คณะครู/บุคลากร');
 
+            watch(() => form.value.color, () => {
+                form.value.department = '';
+            });
+
             watch(isStaff, (newVal) => {
                 if (newVal) {
                     form.value.level = 'คณะครู/บุคลากร';
-                    form.value.room = '-';
+                    form.value.room = '-'; 
                 } else {
                     form.value.level = 'ปวช. 1';
                     form.value.room = ''; 
@@ -200,8 +201,6 @@
             };
 
             const confirmSubmit = () => {
-                // 🟢 แก้ไขเงื่อนไขการตรวจสอบ room จาก !form.value.room เป็น form.value.room === ''
-                // เพื่อรองรับค่าที่เป็นตัวเลข (ห้อง 1-10) และขีด (-)
                 if (!form.value.color || !form.value.department || !form.value.name || !form.value.student_id || form.value.room === '') {
                     Swal.fire('แจ้งเตือน', 'กรุณากรอกข้อมูลให้ครบถ้วน รวมถึงห้องด้วย', 'warning');
                     return;
@@ -227,27 +226,39 @@
                 try {
                     Swal.fire({ title: 'กำลังส่ง...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
                     
-                    // 🟢 แปลง room และ student_id เป็น String อย่างชัดเจนป้องกัน Error ฝั่ง Backend
-                    await axios.post(GOOGLE_SCRIPT_URL, JSON.stringify({ 
-                        action: 'submitSurvey', 
+                    let safeRoom = String(form.value.room);
+                    if (safeRoom.trim() === '-' || safeRoom === '') {
+                        safeRoom = ' -'; 
+                    }
+
+                    // ✅ FIX: เปลี่ยน action จาก 'submitSurvey' เป็น 'saveMember' ให้ตรงกับ Backend
+                    const response = await axios.post(GOOGLE_SCRIPT_URL, JSON.stringify({ 
+                        action: 'saveMember', 
                         ...form.value,
-                        room: String(form.value.room),
+                        room: safeRoom, 
                         student_id: String(form.value.student_id)
                     }), {
                         headers: { "Content-Type": "text/plain" }
                     });
                     
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'สำเร็จ',
-                        text: 'บันทึกข้อมูลเรียบร้อย',
-                        confirmButtonText: 'ตกลง'
-                    }).then(() => {
-                        form.value = { name: '', student_id: '', level: 'ปวช. 1', room: '', shirt_size: 'M', department: '', color: '' };
-                    });
+                    if (response.data && response.data.status === 'success') {
+                         Swal.fire({
+                            icon: 'success',
+                            title: 'สำเร็จ',
+                            text: 'ข้อมูลถูกบันทึกเรียบร้อย',
+                            confirmButtonText: 'ตกลง'
+                        }).then(() => {
+                            form.value = { name: '', student_id: '', level: 'ปวช. 1', room: '', shirt_size: 'M', department: '', color: '' };
+                        });
+                    } else {
+                        // ดึง Error Message จาก Server มาแสดง
+                        let msg = response.data && response.data.message ? response.data.message : "Server response is not success";
+                        throw new Error(msg);
+                    }
+
                 } catch (e) {
                     console.error(e);
-                    Swal.fire('ผิดพลาด', 'ส่งข้อมูลไม่สำเร็จ กรุณาลองใหม่', 'error');
+                    Swal.fire('แจ้งเตือน', 'ไม่สามารถติดต่อฐานข้อมูลได้ โปรดติดต่อแอดมิน', 'error');
                 }
             };
 
