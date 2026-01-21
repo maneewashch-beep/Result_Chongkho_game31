@@ -102,6 +102,7 @@
                     <select v-model="form.room" class="w-full p-3 rounded-2xl text-sm input-pastel border text-center" required>
                         <option value="" disabled>เลือก</option>
                         <option v-for="n in 10" :key="n" :value="n">{{ n }}</option>
+                        <option value="-">-</option>
                     </select>
                 </div>
 
